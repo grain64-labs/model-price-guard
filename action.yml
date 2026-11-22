@@ -1,0 +1,282 @@
+name: model-price-guard
+description: Names the LLM model ids pinned in your repo that are retired or expiring, and the cheapest model that passed a public verdict for the same kind of task. Reads public JSON only; no key, no model call.
+author: Clearbar
+branding:
+  icon: dollar-sign
+  color: blue
+
+inputs:
+  paths:
+    description: Space-separated files or folders to scan, relative to the repository root.
+    required: false
+    default: "."
+  task:
+    description: Optional task family to compare against (classification, extraction or tool-call). Empty shows every published verdict.
+    required: false
+    default: ""
+  fail-on-retired:
+    description: Set to "true" to fail the job when a pinned model is retired or has an announced expiry date.
+    required: false
+    default: "false"
+  fail-on-unlisted:
+    description: Set to "true" to fail the job when a pinned id is not on the price list (renamed, misspelt, or a private or brand-new model).
+    required: false
+    default: "false"
+  data-url:
+    description: The public JSON to read. Change it only to test against a saved copy (a file:// URL works).
+    required: false
+    default: "https://clearbar.grain64.com/guard/v1.json"
+
+outputs:
+  pinned:
+    description: Number of distinct model ids found.
+    value: ${{ steps.guard.outputs.pinned }}
+  retired:
+    description: Number of pinned ids that are retired or have an announced expiry date.
+    value: ${{ steps.guard.outputs.retired }}
+  unlisted:
+    description: Number of pinned ids that are not on the price list.
+    value: ${{ steps.guard.outputs.unlisted }}
+  beaten:
+    description: Number of pinned ids a model that passed a public verdict beats on cost per successful task.
+    value: ${{ steps.guard.outputs.beaten }}
+
+runs:
+  using: composite
+  steps:
+    - id: guard
+      shell: bash
+      env:
+        GUARD_PATHS: ${{ inputs.paths }}
+        GUARD_TASK: ${{ inputs.task }}
+        GUARD_FAIL_RETIRED: ${{ inputs.fail-on-retired }}
+        GUARD_FAIL_UNLISTED: ${{ inputs.fail-on-unlisted }}
+        GUARD_DATA_URL: ${{ inputs.data-url }}
+      run: |
+        python3 - <<'PY'
+        import json, os, re, sys, urllib.request
+
+        SITE_UTM = "?utm_source=action"
+        EXTS = (".py", ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".json", ".yaml", ".yml", ".toml")
+        SKIP_DIRS = {".git", "node_modules", "vendor", "dist", "build", ".venv", "venv", "__pycache__", ".next", ".tox", "site-packages", "target", "coverage"}
+        SKIP_FILES = {"package-lock.json", "pnpm-lock.yaml", "yarn.lock", "poetry.lock", "uv.lock", "composer.lock", "Cargo.lock", "npm-shrinkwrap.json", "tsconfig.json"}
+        MAX_BYTES = 1_000_000
+        PROVIDERS = r"(?:openai|anthropic|google|meta-llama|mistralai|deepseek|x-ai|qwen|cohere|amazon|microsoft|nvidia|perplexity|moonshotai|z-ai|minimax|ai21|nousresearch)"
+        BARE = re.compile(r"^(?:gpt|o\d|chatgpt|claude|gemini|gemma|llama|mistral|mixtral|ministral|codestral|deepseek|qwen|command|grok|glm|kimi|phi|nova|sonar)[a-z0-9._:-]*$")
+        TOKEN = re.compile(r"[A-Za-z0-9][A-Za-z0-9._:/-]*")
+        VARIANT = re.compile(r":(free|extended|online|nitro|floor|thinking|exacto|batch|beta)$")
+        DATESUF = re.compile(r"-(?:20\d{2}-\d{2}-\d{2}|20\d{6}|\d{4})$")
+
+        def out(name, value):
+            p = os.environ.get("GITHUB_OUTPUT")
+            if p:
+                with open(p, "a") as f:
+                    f.write(f"{name}={value}\n")
+
+        def norm(s):
+            return s.lower().replace(".", "-")
+
+        def usd(x):
+            if x is None:
+                return "n/a"
+            return "$" + ("%.6f" % x).rstrip("0").rstrip(".") if x < 0.01 else "$%.4f" % x
+
+        def link(v):
+            return v["url"] + SITE_UTM
+
+        # 1. The public data (one GET, no key).
+        url = os.environ.get("GUARD_DATA_URL") or "https://clearbar.grain64.com/guard/v1.json"
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "model-price-guard/1"})
+            with urllib.request.urlopen(req, timeout=20) as r:
+                data = json.load(r)
+            assert data.get("schema") == "clearbar.guard.v1"
+        except Exception as e:
+            print(f"::warning::model-price-guard could not read {url}: {e}. Nothing was checked.")
+            for n in ("pinned", "retired", "unlisted", "beaten"):
+                out(n, 0)
+            sys.exit(0)
+
+        models = {m["id"]: m for m in data["models"]}
+        index = {}
+        tails = {}
+        for m in data["models"]:  # exact ids first, then dated canonical slugs, so a variant's slug never shadows its base model
+            index.setdefault(norm(m["id"].lstrip("~")), m["id"])
+            tails.setdefault(norm(m["id"].split("/", 1)[-1]), set()).add(m["id"])
+        for m in data["models"]:
+            if m.get("c"):
+                index.setdefault(norm(m["c"]), m["id"])
+                if norm(m["c"].split("/", 1)[-1]) not in tails:
+                    tails[norm(m["c"].split("/", 1)[-1])] = {m["id"]}
+        retired = set(data.get("retired", []))
+        verdicts = data["verdicts"]
+        by_model = {}
+        for v in verdicts:
+            for row in v["models"]:
+                by_model.setdefault(row["model"], []).append((v, row))
+        task = (os.environ.get("GUARD_TASK") or "").strip().lower()
+        shown = [v for v in verdicts if not task or v["task"] == task]
+        if task and not shown:
+            print(f"::warning::task '{task}' has no published verdict; showing all. Families: {', '.join(data['tasks'])}")
+            shown = verdicts
+
+        def resolve(tok):
+            """Returns (kind, listed_id) or None. kind: known | unknown."""
+            t = tok.rstrip(".:/-")
+            if t.startswith("models/"):
+                t = t[7:]
+            if len(t) < 3 or re.search(r"\.(?:json|py|ts|tsx|js|jsx|mjs|md|ya?ml|toml|txt|csv|png|svg|html)$", t, re.I):
+                return None
+            if "/" in t:
+                prov = t.split("/", 1)[0].lower()
+                if not re.fullmatch(PROVIDERS, prov):
+                    return None
+                cands = [t]
+            else:
+                if not BARE.match(t.lower()) or not re.search(r"[-.\d]", t) or not re.search(r"\d", t):
+                    return None
+                cands = [t]
+            for c in cands:
+                for form in (c, VARIANT.sub("", c), DATESUF.sub("", VARIANT.sub("", c))):
+                    n = norm(form)
+                    if n in index:
+                        return ("known", index[n])
+                    if "/" not in form and n in tails and len(tails[n]) == 1:
+                        return ("known", next(iter(tails[n])))
+            return ("unknown", t)
+
+        # 2. Scan the repository.
+        root = os.environ.get("GITHUB_WORKSPACE") or os.getcwd()
+        targets = (os.environ.get("GUARD_PATHS") or ".").split()
+        files = []
+        for tgt in targets:
+            p = os.path.join(root, tgt)
+            if os.path.isfile(p):
+                files.append(p)
+                continue
+            for dp, dns, fns in os.walk(p):
+                dns[:] = sorted(d for d in dns if d not in SKIP_DIRS and not (d.startswith(".") and d != ".github"))
+                for fn in sorted(fns):
+                    low = fn.lower()
+                    if fn in SKIP_FILES or low.endswith(".min.js"):
+                        continue
+                    if low.endswith(EXTS) or (low.startswith(".env") and (low.endswith(".example") or low.endswith(".sample"))):
+                        files.append(os.path.join(dp, fn))
+        found = {}
+        for fp in files:
+            try:
+                if os.path.getsize(fp) > MAX_BYTES:
+                    continue
+                with open(fp, encoding="utf-8", errors="ignore") as f:
+                    lines = f.readlines()
+            except OSError:
+                continue
+            rel = os.path.relpath(fp, root)
+            for n, line in enumerate(lines, 1):
+                if len(line) > 2000:
+                    continue
+                for m in TOKEN.finditer(line):
+                    s = m.start()
+                    if s > 0 and re.match(r"[\w./@:-]", line[s - 1]):
+                        continue
+                    res = resolve(m.group(0))
+                    if not res:
+                        continue
+                    key = res[1] if res[0] == "known" else "?" + res[1]
+                    e = found.setdefault(key, {"kind": res[0], "id": res[1], "where": []})
+                    loc = f"{rel}:{n}"
+                    if loc not in e["where"]:
+                        e["where"].append(loc)
+
+        # 3. Judge each pinned id.
+        today_list = data["price_list"]["date"]
+        rows = []
+        n_ret = n_unl = n_beat = 0
+        for key in sorted(found):
+            e = found[key]
+            where = ", ".join(f"`{w}`" for w in e["where"][:3]) + (f" +{len(e['where']) - 3} more" if len(e["where"]) > 3 else "")
+            if e["kind"] == "unknown":
+                if e["id"] in retired:
+                    n_ret += 1
+                else:
+                    n_unl += 1
+                if e["id"] in retired:
+                    rows.append((e["id"], where, "**retired**", "", f"a published verdict ranked it once; the {today_list} price list no longer carries it"))
+                else:
+                    rows.append((e["id"], where, f"not on the {today_list} price list", "", "retired, renamed or misspelt: check the id at https://openrouter.ai/models"))
+                continue
+            mid = e["id"]
+            m = models[mid]
+            price = f"${m['in']:g} / ${m['out']:g} per Mtok in/out"
+            status = "listed"
+            if m.get("exp"):
+                status = f"**expires {m['exp']}**"
+                n_ret += 1
+            elif mid in retired:
+                status = "retired"
+                n_ret += 1
+            ev = ""
+            hits = [(v, r) for v, r in by_model.get(mid, []) if v in shown]
+            best = None
+            for v, r in hits:
+                c = v["cheapest"]
+                if c and r["status"] == "cleared" and r["cost_per_success"] and c["cost_per_success"] < r["cost_per_success"] and c["model"] != mid:
+                    gain = 1 - c["cost_per_success"] / r["cost_per_success"]
+                    if best is None or gain > best[0]:
+                        best = (gain, v, r)
+            if best:
+                n_beat += 1
+                gain, v, r = best
+                c = v["cheapest"]
+                ev = f"passed {v['title']} at {usd(r['cost_per_success'])} per success; **{c['model']}** passed at {usd(c['cost_per_success'])} ({round(gain * 100)}% less) · [verdict]({link(v)})"
+            elif hits:
+                v, r = hits[0]
+                ev = f"on {v['title']}: {r['status']}, {usd(r['cost_per_success'])} per success; cheapest passing is {v['cheapest']['model'] if v['cheapest'] else 'the baseline'} · [verdict]({link(v)})"
+            else:
+                ev = "not in a published verdict; cheapest passing models are in the table below"
+            rows.append((mid, where, status, price, ev))
+
+        # 4. Job summary.
+        L = []
+        L.append("## model-price-guard")
+        if not rows:
+            L.append(f"No pinned model ids found in {len(files)} scanned files. Price list of {today_list}.")
+        else:
+            L.append(f"{len(rows)} pinned model id{'s' if len(rows) != 1 else ''} in {len(files)} scanned files · price list of {today_list} · {n_ret} retired or expiring · {n_unl} not on the price list · {n_beat} beaten on cost by a model that passed a public verdict")
+            L.append("")
+            L.append("| Model | Found at | Status | List price | Against the public verdicts |")
+            L.append("|---|---|---|---|---|")
+            for r in rows:
+                L.append("| `%s` | %s | %s | %s | %s |" % r)
+        L.append("")
+        L.append("### Cheapest model that passed, per public verdict")
+        L.append("")
+        L.append("| Task | Verdict | Cheapest passing | Cost per successful task | vs baseline |")
+        L.append("|---|---|---|---|---|")
+        for v in shown:
+            c = v["cheapest"]
+            if c:
+                sav = f"{round(c['saving_pct'] * 100)}% cheaper than `{v['baseline']}`" if c.get("saving_pct") else "baseline"
+                L.append(f"| {v['task']} | [{v['title']}]({link(v)}) | `{c['model']}` | {usd(c['cost_per_success'])} | {sav} |")
+            else:
+                L.append(f"| {v['task']} | [{v['title']}]({link(v)}) | the baseline | | |")
+        L.append("")
+        L.append(f"Verdicts priced {data['verdicts_priced_at']} on public datasets, retries and failed attempts counted. Re-run one on your own examples: https://clearbar.grain64.com/{SITE_UTM}")
+        text = "\n".join(L) + "\n"
+        print(text)
+        sp = os.environ.get("GITHUB_STEP_SUMMARY")
+        if sp:
+            with open(sp, "a") as f:
+                f.write(text)
+        out("pinned", len(rows))
+        out("retired", n_ret)
+        out("unlisted", n_unl)
+        out("beaten", n_beat)
+        for key in sorted(found):
+            e = found[key]
+            if e["kind"] == "unknown" or models[e["id"]].get("exp") or e["id"] in retired:
+                f0, _, l0 = e["where"][0].rpartition(":")
+                print(f"::warning file={f0},line={l0}::{e['id']} is retired, expiring or not on the price list of {today_list}")
+        if (os.environ.get("GUARD_FAIL_RETIRED", "").lower() == "true" and n_ret) or (os.environ.get("GUARD_FAIL_UNLISTED", "").lower() == "true" and n_unl):
+            sys.exit(1)
+        PY

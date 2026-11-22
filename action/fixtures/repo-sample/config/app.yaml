@@ -1,0 +1,5 @@
+llm:
+  extractor:
+    model: google/gemini-2.5-flash
+  fallback:
+    model: openai/gpt-4o

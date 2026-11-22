@@ -1,0 +1,559 @@
+{
+ "schema": "clearbar.guard.v1",
+ "site": "https://clearbar.grain64.com",
+ "price_list": {
+  "date": "2026-11-22",
+  "source": "https://openrouter.ai/api/v1/models",
+  "count": 18
+ },
+ "verdicts_priced_at": "2026-11-05",
+ "tasks": [
+  "classification",
+  "extraction",
+  "tool-call"
+ ],
+ "verdicts": [
+  {
+   "slug": "amazon-sentiment",
+   "title": "Product-review sentiment (positive or negative)",
+   "task": "classification",
+   "url": "https://clearbar.grain64.com/verdicts/amazon-sentiment/",
+   "bar": 0.88,
+   "rows": 300,
+   "baseline": "openai/gpt-6.1-sol",
+   "price_snapshot_at": "2026-11-05",
+   "cheapest": {
+    "model": "mistralai/mistral-small-2603",
+    "cost_per_success": 1.9e-05,
+    "pass_rate": 0.9767,
+    "saving_pct": 0.9404
+   },
+   "models": [
+    {
+     "model": "openai/gpt-6.1-sol",
+     "status": "cleared",
+     "pass_rate": 0.9867,
+     "cost_per_success": 0.000319,
+     "baseline": true
+    },
+    {
+     "model": "openai/gpt-6.1-terra",
+     "status": "cleared",
+     "pass_rate": 0.98,
+     "cost_per_success": 0.000165,
+     "baseline": false
+    },
+    {
+     "model": "openai/gpt-6-luna",
+     "status": "cleared",
+     "pass_rate": 0.98,
+     "cost_per_success": 2.4e-05,
+     "baseline": false
+    },
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "status": "cleared",
+     "pass_rate": 0.9733,
+     "cost_per_success": 2.3e-05,
+     "baseline": false
+    },
+    {
+     "model": "google/gemini-3.5-flash-lite",
+     "status": "cleared",
+     "pass_rate": 0.9867,
+     "cost_per_success": 4.1e-05,
+     "baseline": false
+    },
+    {
+     "model": "deepseek/deepseek-v4.1-flash",
+     "status": "cleared",
+     "pass_rate": 0.98,
+     "cost_per_success": 4.3e-05,
+     "baseline": false
+    },
+    {
+     "model": "qwen/qwen3.8-flash",
+     "status": "cleared",
+     "pass_rate": 0.98,
+     "cost_per_success": 5.4e-05,
+     "baseline": false
+    },
+    {
+     "model": "mistralai/mistral-small-2603",
+     "status": "cleared",
+     "pass_rate": 0.9767,
+     "cost_per_success": 1.9e-05,
+     "baseline": false
+    },
+    {
+     "model": "meta-llama/llama-4-maverick",
+     "status": "cleared",
+     "pass_rate": 0.98,
+     "cost_per_success": 4.2e-05,
+     "baseline": false
+    }
+   ]
+  },
+  {
+   "slug": "banking77-intent",
+   "title": "Banking customer-message intent classification (77 intents)",
+   "task": "classification",
+   "url": "https://clearbar.grain64.com/verdicts/banking77-intent/",
+   "bar": 0.7,
+   "rows": 150,
+   "baseline": "openai/gpt-6.1-sol",
+   "price_snapshot_at": "2026-11-05",
+   "cheapest": {
+    "model": "openai/gpt-6.1-terra",
+    "cost_per_success": 0.000727,
+    "pass_rate": 0.84,
+    "saving_pct": 0.4285
+   },
+   "models": [
+    {
+     "model": "openai/gpt-6.1-sol",
+     "status": "cleared",
+     "pass_rate": 0.86,
+     "cost_per_success": 0.001272,
+     "baseline": true
+    },
+    {
+     "model": "openai/gpt-6.1-terra",
+     "status": "cleared",
+     "pass_rate": 0.84,
+     "cost_per_success": 0.000727,
+     "baseline": false
+    },
+    {
+     "model": "openai/gpt-6-luna",
+     "status": "cleared",
+     "pass_rate": 0.82,
+     "cost_per_success": 9e-05,
+     "baseline": false
+    },
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "status": "cleared",
+     "pass_rate": 0.8,
+     "cost_per_success": 0.000138,
+     "baseline": false
+    },
+    {
+     "model": "google/gemini-3.5-flash-lite",
+     "status": "borderline",
+     "pass_rate": 0.7533,
+     "cost_per_success": 0.000249,
+     "baseline": false
+    },
+    {
+     "model": "deepseek/deepseek-v4.1-flash",
+     "status": "cleared",
+     "pass_rate": 0.7867,
+     "cost_per_success": 0.000157,
+     "baseline": false
+    },
+    {
+     "model": "qwen/qwen3.8-flash",
+     "status": "borderline",
+     "pass_rate": 0.7733,
+     "cost_per_success": 0.000147,
+     "baseline": false
+    },
+    {
+     "model": "mistralai/mistral-small-2603",
+     "status": "below bar",
+     "pass_rate": 0.68,
+     "cost_per_success": 2.6e-05,
+     "baseline": false
+    },
+    {
+     "model": "meta-llama/llama-4-maverick",
+     "status": "borderline",
+     "pass_rate": 0.7133,
+     "cost_per_success": 0.000125,
+     "baseline": false
+    },
+    {
+     "model": "mistralai/mistral-large-4-0",
+     "status": "below bar",
+     "pass_rate": 0.6333,
+     "cost_per_success": 0.002274,
+     "baseline": false
+    }
+   ]
+  },
+  {
+   "slug": "glaive-tool-call",
+   "title": "Tool-call argument checking: pick the right function and fill its arguments",
+   "task": "tool-call",
+   "url": "https://clearbar.grain64.com/verdicts/glaive-tool-call/",
+   "bar": 0.85,
+   "rows": 300,
+   "baseline": "openai/gpt-6.1-sol",
+   "price_snapshot_at": "2026-11-05",
+   "cheapest": {
+    "model": "openai/gpt-6-luna",
+    "cost_per_success": 5.1e-05,
+    "pass_rate": 0.93,
+    "saving_pct": 0.9337
+   },
+   "models": [
+    {
+     "model": "openai/gpt-6.1-sol",
+     "status": "cleared",
+     "pass_rate": 0.94,
+     "cost_per_success": 0.000769,
+     "baseline": true
+    },
+    {
+     "model": "openai/gpt-6.1-terra",
+     "status": "cleared",
+     "pass_rate": 0.9367,
+     "cost_per_success": 0.000425,
+     "baseline": false
+    },
+    {
+     "model": "openai/gpt-6-luna",
+     "status": "cleared",
+     "pass_rate": 0.93,
+     "cost_per_success": 5.1e-05,
+     "baseline": false
+    },
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "status": "cleared",
+     "pass_rate": 0.9467,
+     "cost_per_success": 6.4e-05,
+     "baseline": false
+    },
+    {
+     "model": "google/gemini-3.5-flash-lite",
+     "status": "cleared",
+     "pass_rate": 0.95,
+     "cost_per_success": 0.000157,
+     "baseline": false
+    },
+    {
+     "model": "deepseek/deepseek-v4.1-flash",
+     "status": "cleared",
+     "pass_rate": 0.96,
+     "cost_per_success": 7.2e-05,
+     "baseline": false
+    },
+    {
+     "model": "qwen/qwen3.8-flash",
+     "status": "cleared",
+     "pass_rate": 0.93,
+     "cost_per_success": 9.3e-05,
+     "baseline": false
+    },
+    {
+     "model": "mistralai/mistral-small-2603",
+     "status": "below bar",
+     "pass_rate": 0.7067,
+     "cost_per_success": 9.8e-05,
+     "baseline": false
+    },
+    {
+     "model": "meta-llama/llama-4-maverick",
+     "status": "cleared",
+     "pass_rate": 0.9467,
+     "cost_per_success": 8e-05,
+     "baseline": false
+    }
+   ]
+  },
+  {
+   "slug": "paraloq-json-extraction",
+   "title": "Structured JSON extraction from messy documents",
+   "task": "extraction",
+   "url": "https://clearbar.grain64.com/verdicts/paraloq-json-extraction/",
+   "bar": 0.55,
+   "rows": 150,
+   "baseline": "openai/gpt-6.1-sol",
+   "price_snapshot_at": "2026-11-05",
+   "cheapest": {
+    "model": "openai/gpt-6-luna",
+    "cost_per_success": 0.000401,
+    "pass_rate": 0.5515,
+    "saving_pct": 0.9452
+   },
+   "models": [
+    {
+     "model": "openai/gpt-6.1-sol",
+     "status": "below bar",
+     "pass_rate": 0.5328,
+     "cost_per_success": 0.007313,
+     "baseline": true
+    },
+    {
+     "model": "openai/gpt-6.1-terra",
+     "status": "below bar",
+     "pass_rate": 0.5182,
+     "cost_per_success": 0.003926,
+     "baseline": false
+    },
+    {
+     "model": "openai/gpt-6-luna",
+     "status": "borderline",
+     "pass_rate": 0.5515,
+     "cost_per_success": 0.000401,
+     "baseline": false
+    },
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "status": "borderline",
+     "pass_rate": 0.6103,
+     "cost_per_success": 0.000577,
+     "baseline": false
+    },
+    {
+     "model": "google/gemini-3.5-flash-lite",
+     "status": "borderline",
+     "pass_rate": 0.5882,
+     "cost_per_success": 0.001478,
+     "baseline": false
+    },
+    {
+     "model": "deepseek/deepseek-v4.1-flash",
+     "status": "below bar",
+     "pass_rate": 0.5368,
+     "cost_per_success": 0.0026,
+     "baseline": false
+    },
+    {
+     "model": "qwen/qwen3.8-flash",
+     "status": "below bar",
+     "pass_rate": 0.5294,
+     "cost_per_success": 0.001849,
+     "baseline": false
+    },
+    {
+     "model": "mistralai/mistral-small-2603",
+     "status": "borderline",
+     "pass_rate": 0.5588,
+     "cost_per_success": 0.000416,
+     "baseline": false
+    },
+    {
+     "model": "meta-llama/llama-4-maverick",
+     "status": "borderline",
+     "pass_rate": 0.5809,
+     "cost_per_success": 0.000556,
+     "baseline": false
+    }
+   ]
+  },
+  {
+   "slug": "sms-spam",
+   "title": "SMS spam detection (spam or legitimate message)",
+   "task": "classification",
+   "url": "https://clearbar.grain64.com/verdicts/sms-spam/",
+   "bar": 0.9,
+   "rows": 300,
+   "baseline": "openai/gpt-6.1-sol",
+   "price_snapshot_at": "2026-11-05",
+   "cheapest": {
+    "model": "anthropic/claude-haiku-5.5",
+    "cost_per_success": 2.1e-05,
+    "pass_rate": 0.9733,
+    "saving_pct": 0.9216
+   },
+   "models": [
+    {
+     "model": "openai/gpt-6.1-sol",
+     "status": "cleared",
+     "pass_rate": 0.9833,
+     "cost_per_success": 0.000268,
+     "baseline": true
+    },
+    {
+     "model": "openai/gpt-6.1-terra",
+     "status": "cleared",
+     "pass_rate": 0.9833,
+     "cost_per_success": 0.000163,
+     "baseline": false
+    },
+    {
+     "model": "openai/gpt-6-luna",
+     "status": "cleared",
+     "pass_rate": 0.97,
+     "cost_per_success": 2.6e-05,
+     "baseline": false
+    },
+    {
+     "model": "anthropic/claude-haiku-5.5",
+     "status": "cleared",
+     "pass_rate": 0.9733,
+     "cost_per_success": 2.1e-05,
+     "baseline": false
+    },
+    {
+     "model": "google/gemini-3.5-flash-lite",
+     "status": "cleared",
+     "pass_rate": 0.9733,
+     "cost_per_success": 3.2e-05,
+     "baseline": false
+    },
+    {
+     "model": "deepseek/deepseek-v4.1-flash",
+     "status": "cleared",
+     "pass_rate": 0.9633,
+     "cost_per_success": 5.1e-05,
+     "baseline": false
+    },
+    {
+     "model": "qwen/qwen3.8-flash",
+     "status": "cleared",
+     "pass_rate": 0.9767,
+     "cost_per_success": 7.5e-05,
+     "baseline": false
+    },
+    {
+     "model": "mistralai/mistral-small-2603",
+     "status": "cleared",
+     "pass_rate": 0.94,
+     "cost_per_success": 1.6e-05,
+     "baseline": false
+    },
+    {
+     "model": "meta-llama/llama-4-maverick",
+     "status": "cleared",
+     "pass_rate": 0.9433,
+     "cost_per_success": 2.7e-05,
+     "baseline": false
+    }
+   ]
+  }
+ ],
+ "retired": [
+  "openai/gpt-4.1-nano"
+ ],
+ "models": [
+  {
+   "id": "anthropic/claude-haiku-5.5",
+   "c": "anthropic/claude-haiku-5.5-20261007",
+   "name": "Anthropic: Claude Haiku 5.5",
+   "in": 0.1,
+   "out": 0.5
+  },
+  {
+   "id": "anthropic/claude-sonnet-4.5",
+   "c": "anthropic/claude-4.5-sonnet-20250929",
+   "name": "Anthropic: Claude Sonnet 4.5",
+   "in": 3,
+   "out": 15
+  },
+  {
+   "id": "deepseek/deepseek-v4.1-flash",
+   "c": "deepseek/deepseek-v4.1-flash-20260910",
+   "name": "DeepSeek: DeepSeek V4.1 Flash",
+   "in": 0.0498,
+   "out": 0.1992
+  },
+  {
+   "id": "google/gemini-2.5-flash",
+   "name": "Google: Gemini 2.5 Flash",
+   "in": 0.3,
+   "out": 2.5
+  },
+  {
+   "id": "google/gemini-3.5-flash-lite",
+   "c": "google/gemini-3.5-flash-lite-20260721",
+   "name": "Google: Gemini 3.5 Flash Lite",
+   "in": 0.3,
+   "out": 2.5
+  },
+  {
+   "id": "meta-llama/llama-4-maverick",
+   "c": "meta-llama/llama-4-maverick-17b-128e-instruct",
+   "name": "Meta: Llama 4 Maverick",
+   "in": 0.35,
+   "out": 1
+  },
+  {
+   "id": "mistralai/mistral-large-4-0",
+   "c": "mistralai/mistral-large-4-0-20261006",
+   "name": "Mistral: Mistral Large 4",
+   "in": 0.7,
+   "out": 2.1
+  },
+  {
+   "id": "mistralai/mistral-small-2603",
+   "name": "Mistral: Mistral Small 4",
+   "in": 0.15,
+   "out": 0.6
+  },
+  {
+   "id": "openai/gpt-4o",
+   "name": "OpenAI: GPT-4o",
+   "in": 2.5,
+   "out": 10
+  },
+  {
+   "id": "openai/gpt-4o-mini",
+   "name": "OpenAI: GPT-4o-mini",
+   "in": 0.15,
+   "out": 0.6
+  },
+  {
+   "id": "openai/gpt-4o-mini:batch",
+   "c": "openai/gpt-4o-mini",
+   "name": "OpenAI: GPT-4o-mini (batch)",
+   "in": 0.075,
+   "out": 0.3
+  },
+  {
+   "id": "openai/gpt-5-mini",
+   "c": "openai/gpt-5-mini-2025-08-07",
+   "name": "OpenAI: GPT-5 Mini",
+   "in": 0.25,
+   "out": 2,
+   "exp": "2026-12-11"
+  },
+  {
+   "id": "openai/gpt-5-mini:batch",
+   "c": "openai/gpt-5-mini-2025-08-07",
+   "name": "OpenAI: GPT-5 Mini (batch)",
+   "in": 0.125,
+   "out": 1,
+   "exp": "2026-12-11"
+  },
+  {
+   "id": "openai/gpt-5-pro",
+   "c": "openai/gpt-5-pro-2025-10-06",
+   "name": "OpenAI: GPT-5 Pro",
+   "in": 15,
+   "out": 120,
+   "exp": "2026-12-11"
+  },
+  {
+   "id": "openai/gpt-6-luna",
+   "c": "openai/gpt-6-luna-20260922",
+   "name": "OpenAI: GPT-6 Luna",
+   "in": 0.1,
+   "out": 0.5
+  },
+  {
+   "id": "openai/gpt-6.1-sol",
+   "c": "openai/gpt-6.1-sol-20260929",
+   "name": "OpenAI: GPT-6.1 Sol",
+   "in": 2,
+   "out": 10
+  },
+  {
+   "id": "openai/gpt-6.1-terra",
+   "c": "openai/gpt-6.1-terra-20261026",
+   "name": "OpenAI: GPT-6.1 Terra",
+   "in": 1,
+   "out": 5
+  },
+  {
+   "id": "qwen/qwen3.8-flash",
+   "c": "qwen/qwen3.8-flash-20260826",
+   "name": "Qwen: Qwen3.8 Flash",
+   "in": 0.15,
+   "out": 0.47
+  }
+ ]
+}
